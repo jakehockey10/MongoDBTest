@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -29,13 +24,13 @@ namespace MongoDBTest
         {
             _mongoTest.KillServerAndCleanup();
         }
-        
+
         [TearDown]
         public void TearDown()
         {
             _mongoTest.LoadDataset();
         }
-        
+
         [Test]
         public async void ShouldBeAbleToUpdateTopLevelFields()
         {
