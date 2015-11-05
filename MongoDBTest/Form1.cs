@@ -16,87 +16,83 @@ namespace MongoDBTest
         {
             InitializeComponent();
             _mongoTest = new MongoTest();
+            StartTest();
+        }
+
+        private void StartTest()
+        {
+            if (!_mongoTest.IsServerRunning) OutputResultsOf(() => _mongoTest.StartServer());
+            if (_mongoTest.IsServerRunning) OutputResultsOf(() => _mongoTest.ConnectToTestDB());
+        }
+
+        private static void OutputResultsOf(Action action)
+        {
+            Console.WriteLine(TaskCompletionTimeRecorder.RecordTaskCompletionTime(action));
+        }
+
+        private static void OutputResultsOf(Func<bool> action)
+        {
+            Console.WriteLine(TaskCompletionTimeRecorder.RecordTaskCompletionTime(() => action()));
         }
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            await QueryByAFieldInAnArray();
-        }
-        
-        private static async Task<string> RecordTaskCompletionTime(Func<Task<List<BsonDocument>>> action)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            List<BsonDocument> result = await action();
-            stopwatch.Stop();
-            return $"Found {result.Count} restaurants with that query ({stopwatch.ElapsedMilliseconds} ms).";
-        }
-
-        private static async Task<string> RecordTaskCompletionTime(Func<Task<int>> action)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            int result = await action();
-            stopwatch.Stop();
-            return $"{result} restaurants in the test db ({stopwatch.ElapsedMilliseconds} ms).";
+            await UpdateTopLevelFields();
         }
 
         private async Task CountRestaurants()
         {
-            await OutputResultsOf(() => _mongoTest.CountRestaurants());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.CountRestaurants());
         }
 
         private async Task QueryByTopLevelField()
         {
-            await OutputResultsOf(() => _mongoTest.QueryByTopLevelField());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByTopLevelField());
         }
 
         private async Task QueryByAFieldInAnEmbeddedDocument()
         {
-            await OutputResultsOf(() => _mongoTest.QueryByAFieldInAnEmbeddedDocument());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnEmbeddedDocument());
         }
 
         private async Task QueryByAFieldInAnArray()
         {
-            await OutputResultsOf(() => _mongoTest.QueryByAFieldInAnArray());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnArray());
         }
 
         private async Task GreaterThanOperator()
         {
-            await OutputResultsOf(() => _mongoTest.GreaterThanOperator());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.GreaterThanOperator());
         }
 
         private async Task LessThanOperator()
         {
-            await OutputResultsOf(() => _mongoTest.LessThanOperator());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LessThanOperator());
         }
 
         private async Task LogicalAnd()
         {
-            await OutputResultsOf(() => _mongoTest.LogicalAnd());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalAnd());
         }
 
         private async Task LogicalOr()
         {
-            await OutputResultsOf(() => _mongoTest.LogicalOr());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalOr());
         }
 
         private async Task SortQueryResults()
         {
-            await OutputResultsOf(() => _mongoTest.SortQueryResults());
-        }
-        
-        private static async Task OutputResultsOf(Func<Task<int>> action)
-        {
-            Console.WriteLine(await RecordTaskCompletionTime(async () => await action()));
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.SortQueryResults());
         }
 
-        private static async Task OutputResultsOf(Func<Task<List<BsonDocument>>> action)
+        private async Task UpdateTopLevelFields()
         {
-            Console.WriteLine(await RecordTaskCompletionTime(async () => await action()));
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.UpdateTopLevelFields());
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _mongoTest.Disconnect();
+            _mongoTest.KillServerAndCleanup();
         }
     }
 }
