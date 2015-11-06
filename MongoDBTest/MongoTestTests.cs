@@ -16,7 +16,7 @@ namespace MongoDBTest
         {
             _mongoTest = new MongoTest();
             _mongoTest.KillServerAndCleanup();
-            Assert.True(_mongoTest.StartServer());
+            _mongoTest.StartServer();
             _mongoTest.ConnectToTestDB();
             _mongoTest.LoadDataset();
         }

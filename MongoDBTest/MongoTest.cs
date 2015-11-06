@@ -249,12 +249,11 @@ namespace MongoDBTest
             GC.Collect();
         }
 
-        public bool StartServer()
+        public void StartServer()
         {
             var process = new Process {StartInfo = {FileName = ServerExecutable}};
             bool start = process.Start();
             Thread.Sleep(1000);
-            return start;
         }
 
         public void ConnectToTestDB()

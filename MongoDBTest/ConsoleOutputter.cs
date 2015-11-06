@@ -8,6 +8,11 @@ namespace MongoDBTest
 {
     public class ConsoleOutputter
     {
+        public static void OutputResultsOf(Action action)
+        {
+            Console.WriteLine(TaskCompletionTimeRecorder.RecordTaskCompletionTime(action));
+        }
+
         public static async Task OutputResultsOf(Func<Task<int>> action)
         {
             Console.WriteLine(await TaskCompletionTimeRecorder.RecordTaskCompletionTime(async () => await action()));

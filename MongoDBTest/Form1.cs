@@ -1,16 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDBTest.Properties;
 
 namespace MongoDBTest
 {
     public partial class Form1 : Form
     {
         private readonly MongoTest _mongoTest;
+
+        public enum Action
+        {
+            NoOp,
+            CountRestaurants
+        }
+
+        private readonly Dictionary<Action, string> _comboBoxEntries = new Dictionary<Action, string>
+        {
+            {Action.CountRestaurants, "Count Restaurants"}
+        };
+
+        private Dictionary<Action, string> _selectedItem;
 
         public Form1()
         {
@@ -21,28 +36,31 @@ namespace MongoDBTest
 
         private void StartTest()
         {
-            if (!_mongoTest.IsServerRunning) OutputResultsOf(() => _mongoTest.StartServer());
-            if (_mongoTest.IsServerRunning) OutputResultsOf(() => _mongoTest.ConnectToTestDB());
-        }
-
-        private static void OutputResultsOf(Action action)
-        {
-            Console.WriteLine(TaskCompletionTimeRecorder.RecordTaskCompletionTime(action));
-        }
-
-        private static void OutputResultsOf(Func<bool> action)
-        {
-            Console.WriteLine(TaskCompletionTimeRecorder.RecordTaskCompletionTime(() => action()));
+            if (!_mongoTest.IsServerRunning) ConsoleOutputter.OutputResultsOf(() => _mongoTest.StartServer());
+            if (_mongoTest.IsServerRunning) ConsoleOutputter.OutputResultsOf(() => _mongoTest.ConnectToTestDB());
         }
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            await UpdateTopLevelFields();
+            switch (SelectedItem.Key)
+            {
+                case Action.NoOp:
+                    break;
+                case Action.CountRestaurants:
+                    await CountRestaurants();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
+
+        public KeyValuePair<Action, string> SelectedItem => (KeyValuePair<Action, string>) comboBox1.SelectedItem;
 
         private async Task CountRestaurants()
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.CountRestaurants());
+            label1.Text = Resources.Form1_CountRestaurants_working___;
+            string output = await TaskCompletionTimeRecorder.RecordTaskCompletionTime(() => _mongoTest.CountRestaurants());
+            label1.Text = output;
         }
 
         private async Task QueryByTopLevelField(string field, string value)
@@ -93,6 +111,18 @@ namespace MongoDBTest
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             _mongoTest.KillServerAndCleanup();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            comboBox1.DataSource = _comboBoxEntries.ToList();
+            comboBox1.DisplayMember = "Value";
+            comboBox1.ValueMember = "Key";
+        }
+
+        private void comboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            _selectedItem = (Dictionary<Action, string>) comboBox1.SelectedItem;
         }
     }
 }
