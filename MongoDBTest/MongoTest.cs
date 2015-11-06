@@ -19,12 +19,9 @@ namespace MongoDBTest
         private const string ServerExecutable = @"C:\Program Files\MongoDB\Server\3.0\bin\mongod.exe";
         private const string ServerProcessName = "mongod";
         private const string MongoImportExecutable = @"C:\Program Files\MongoDB\Server\3.0\bin\mongoimport.exe";
-
-        private const string MongoImportArguments =
-            "--db test --collection restaurants --drop --file \"C:\\Users\\jakeh\\Documents\\Visual Studio 2015\\Projects\\MongoDBTest\\dataset.json\"";
+        private const string MongoImportArguments = "--db test --collection restaurants --drop --file \"C:\\Users\\jakeh\\Documents\\Visual Studio 2015\\Projects\\MongoDBTest\\dataset.json\"";
 
         #endregion
-
 
         #region Protected Fields
 
@@ -33,13 +30,11 @@ namespace MongoDBTest
 
         #endregion
 
-        
         #region Public Properties
 
         public bool IsServerRunning => Process.GetProcessesByName(Path.GetFileName(ServerProcessName)).Length > 0;
 
         #endregion
-
 
         #region Public Methods
 
@@ -60,56 +55,58 @@ namespace MongoDBTest
             return count;
         }
 
-        public async Task<List<BsonDocument>> QueryByTopLevelField()
+        public async Task<List<BsonDocument>> QueryByTopLevelField(string field, string value)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
-            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("borough", "Manhattan");
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<BsonDocument>> QueryByAFieldInAnEmbeddedDocument()
+        public async Task<List<BsonDocument>> QueryByAFieldInAnEmbeddedDocument(string field, string value)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
-            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("address.zipcode", "10075");
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<BsonDocument>> QueryByAFieldInAnArray()
+        public async Task<List<BsonDocument>> QueryByAFieldInAnArray(string field, string value)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
-            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("grades.grade", "B");
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq(field, value);
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<BsonDocument>> GreaterThanOperator()
+        public async Task<List<BsonDocument>> GreaterThanOperator(string field, int value)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
-            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Gt("grades.score", 30);
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Gt(field, value);
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<BsonDocument>> LessThanOperator()
+        public async Task<List<BsonDocument>> LessThanOperator(string field, int value)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
-            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Lt("grades.score", 10);
+            FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Lt(field, value);
             return await collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<BsonDocument>> LogicalAnd()
+        public async Task<List<BsonDocument>> LogicalAnd(List<Tuple<string, string>> fieldValuePairs)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
             FilterDefinitionBuilder<BsonDocument> builder = Builders<BsonDocument>.Filter;
-            FilterDefinition<BsonDocument> filter = builder.Eq("cuisine", "Italian") &
-                                                    builder.Eq("address.zipcode", "10075");
+            Tuple<string, string> first = fieldValuePairs.First();
+            FilterDefinition<BsonDocument> filter = builder.Eq(first.Item1, first.Item2);
+            filter = fieldValuePairs.Skip(1).Aggregate(filter, (current, pair) => current & builder.Eq(pair.Item1, pair.Item2));
             return await collection.Find(filter).ToListAsync();
         }
-
-        public async Task<List<BsonDocument>> LogicalOr()
+        
+        public async Task<List<BsonDocument>> LogicalOr(List<Tuple<string, string>> fieldValuePairs)
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
             FilterDefinitionBuilder<BsonDocument> builder = Builders<BsonDocument>.Filter;
-            FilterDefinition<BsonDocument> filter = builder.Eq("cuisine", "Italian") |
-                                                    builder.Eq("address.zipcode", "10075");
+            Tuple<string, string> first = fieldValuePairs.First();
+            FilterDefinition<BsonDocument> filter = builder.Eq(first.Item1, first.Item2);
+            filter = fieldValuePairs.Skip(1).Aggregate(filter, (current, pair) => current | builder.Eq(pair.Item1, pair.Item2));
             return await collection.Find(filter).ToListAsync();
         }
 
@@ -122,42 +119,8 @@ namespace MongoDBTest
             return await collection.Find(filter).Sort(sort).ToListAsync();
         }
 
-        public static async void InsertADocument()
+        public static async void InsertADocument(BsonDocument document)
         {
-            var document = new BsonDocument
-            {
-                {
-                    "address", new BsonDocument
-                    {
-                        {"street", "2 Avenue"},
-                        {"zipcode", "10075"},
-                        {"building", "1480"},
-                        {"coord", new BsonArray {73.9557413, 40.7720266}}
-                    }
-                },
-                {"borough", "Manhattan"},
-                {"cuisine", "Italian"},
-                {
-                    "grades", new BsonArray
-                    {
-                        new BsonDocument
-                        {
-                            {"date", new DateTime(2014, 10, 1, 0, 0, 0, DateTimeKind.Utc)},
-                            {"grade", "A"},
-                            {"score", 11}
-                        },
-                        new BsonDocument
-                        {
-                            {"date", new DateTime(2014, 1, 6, 0, 0, 0, DateTimeKind.Utc)},
-                            {"grade", "B"},
-                            {"score", 17}
-                        }
-                    }
-                },
-                {"name", "Vella"},
-                {"restaurant_id", "41704620"}
-            };
-
             IMongoCollection<BsonDocument> collection = GetRestaurants();
             await collection.InsertOneAsync(document);
         }
@@ -207,16 +170,46 @@ namespace MongoDBTest
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
             FilterDefinition<BsonDocument> filter = Builders<BsonDocument>.Filter.Eq("borough", "Manhattan");
-            DeleteResult result = await collection.DeleteManyAsync(filter);
-            return result;
+            return await collection.DeleteManyAsync(filter);
         }
 
         public async Task<DeleteResult> DeleteAllDocuments()
         {
             IMongoCollection<BsonDocument> collection = GetRestaurants();
             var filter = new BsonDocument();
-            DeleteResult result = await collection.DeleteManyAsync(filter);
-            return result;
+            return await collection.DeleteManyAsync(filter);
+        }
+
+        public async Task<List<BsonDocument>> GroupDocumentsByAFieldAndCalculateCount()
+        {
+            IMongoCollection<BsonDocument> collection = GetRestaurants();
+            IAggregateFluent<BsonDocument> aggregate =
+                collection.Aggregate()
+                    .Group(new BsonDocument {{"_id", "$borough"}, {"count", new BsonDocument("$sum", 1)}});
+            return await aggregate.ToListAsync();
+        }
+
+        public async Task<List<BsonDocument>> FilterAndGroupDocuments()
+        {
+            IMongoCollection<BsonDocument> collection = Database.GetCollection<BsonDocument>("restaurants");
+            IAggregateFluent<BsonDocument> aggregate = collection.Aggregate()
+                .Match(new BsonDocument {{"borough", "Queens"}, {"cuisine", "Brazilian"}})
+                .Group(new BsonDocument {{"_id", "$address.zipcode"}, {"count", new BsonDocument("$sum", 1)}});
+            return await aggregate.ToListAsync();
+        }
+
+        public async Task<string> CreateASingleFieldIndex()
+        {
+            IMongoCollection<BsonDocument> collection = Database.GetCollection<BsonDocument>("restaurants");
+            IndexKeysDefinition<BsonDocument> keys = Builders<BsonDocument>.IndexKeys.Ascending("cuisine");
+            return await collection.Indexes.CreateOneAsync(keys);
+        }
+
+        public async Task<string> CreateACompoundIndex()
+        {
+            IMongoCollection<BsonDocument> collection = GetRestaurants();
+            IndexKeysDefinition<BsonDocument> keys = Builders<BsonDocument>.IndexKeys.Ascending("cuisine").Ascending("address.zipcode");
+            return await collection.Indexes.CreateOneAsync(keys);
         }
 
         public async Task DropACollection()
@@ -270,6 +263,11 @@ namespace MongoDBTest
             Database = Client.GetDatabase("test");
         }
 
+        public async Task<IAsyncCursor<BsonDocument>> ListIndexesAsync()
+        {
+            return await GetRestaurants().Indexes.ListAsync();
+        }
+
         /// <summary>
         ///     Download a file from a url.
         /// </summary>
@@ -297,7 +295,6 @@ namespace MongoDBTest
 
         #endregion
 
-
         #region Private Methods
 
         private static IMongoCollection<T> GetCollection<T>(string name)
@@ -311,6 +308,5 @@ namespace MongoDBTest
         }
 
         #endregion
-
     }
 }

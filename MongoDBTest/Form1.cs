@@ -45,39 +45,39 @@ namespace MongoDBTest
             await ConsoleOutputter.OutputResultsOf(() => _mongoTest.CountRestaurants());
         }
 
-        private async Task QueryByTopLevelField()
+        private async Task QueryByTopLevelField(string field, string value)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByTopLevelField());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByTopLevelField(field, value));
         }
 
-        private async Task QueryByAFieldInAnEmbeddedDocument()
+        private async Task QueryByAFieldInAnEmbeddedDocument(string field, string value)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnEmbeddedDocument());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnEmbeddedDocument(field, value));
         }
 
-        private async Task QueryByAFieldInAnArray()
+        private async Task QueryByAFieldInAnArray(string field, string value)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnArray());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.QueryByAFieldInAnArray(field, value));
         }
 
-        private async Task GreaterThanOperator()
+        private async Task GreaterThanOperator(string field, int value)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.GreaterThanOperator());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.GreaterThanOperator(field, value));
         }
 
-        private async Task LessThanOperator()
+        private async Task LessThanOperator(string field, int value)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LessThanOperator());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LessThanOperator(field, value));
         }
 
-        private async Task LogicalAnd()
+        private async Task LogicalAnd(List<Tuple<string, string>> fieldValuePairs)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalAnd());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalAnd(fieldValuePairs));
         }
 
-        private async Task LogicalOr()
+        private async Task LogicalOr(List<Tuple<string, string>> fieldValuePairs)
         {
-            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalOr());
+            await ConsoleOutputter.OutputResultsOf(() => _mongoTest.LogicalOr(fieldValuePairs));
         }
 
         private async Task SortQueryResults()
